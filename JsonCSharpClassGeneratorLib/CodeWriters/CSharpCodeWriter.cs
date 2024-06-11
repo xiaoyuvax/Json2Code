@@ -19,7 +19,6 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
             get { return "C#"; }
         }
 
-
         private const string NoRenameAttribute = "[Obfuscation(Feature = \"renaming\", Exclude = true)]";
         private const string NoPruneAttribute = "[Obfuscation(Feature = \"trigger\", Exclude = false)]";
 
@@ -27,34 +26,34 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
         {
             var arraysAsLists = !config.ExplicitDeserialization;
 
-            switch (type.Type)
+            return type.Type switch
             {
-                case JsonTypeEnum.Anything: return "object";
-                case JsonTypeEnum.Array: return arraysAsLists ? "IList<" + GetTypeName(type.InternalType, config) + ">" : GetTypeName(type.InternalType, config) + "[]";
-                case JsonTypeEnum.Dictionary: return "Dictionary<string, " + GetTypeName(type.InternalType, config) + ">";
-                case JsonTypeEnum.Boolean: return "bool";
-                case JsonTypeEnum.Float: return "double";
-                case JsonTypeEnum.Integer: return "int";
-                case JsonTypeEnum.Long: return "long";
-                case JsonTypeEnum.Date: return "DateTime";
-                case JsonTypeEnum.NonConstrained: return "object";
-                case JsonTypeEnum.NullableBoolean: return "bool?";
-                case JsonTypeEnum.NullableFloat: return "double?";
-                case JsonTypeEnum.NullableInteger: return "int?";
-                case JsonTypeEnum.NullableLong: return "long?";
-                case JsonTypeEnum.NullableDate: return "DateTime?";
-                case JsonTypeEnum.NullableSomething: return "object";
-                case JsonTypeEnum.Object: return type.AssignedName;
-                case JsonTypeEnum.String: return "string";
-                default: throw new System.NotSupportedException("Unsupported json type");
-            }
+                JsonTypeEnum.Anything => "object",
+                JsonTypeEnum.Array => arraysAsLists ? "IList<" + GetTypeName(type.InternalType, config) + ">" : GetTypeName(type.InternalType, config) + "[]",
+                JsonTypeEnum.Dictionary => "Dictionary<string, " + GetTypeName(type.InternalType, config) + ">",
+                JsonTypeEnum.Boolean => "bool",
+                JsonTypeEnum.Float => "double",
+                JsonTypeEnum.Integer => "int",
+                JsonTypeEnum.Long => "long",
+                JsonTypeEnum.Date => "DateTime",
+                JsonTypeEnum.NonConstrained => "object",
+                JsonTypeEnum.NullableBoolean => "bool?",
+                JsonTypeEnum.NullableFloat => "double?",
+                JsonTypeEnum.NullableInteger => "int?",
+                JsonTypeEnum.NullableLong => "long?",
+                JsonTypeEnum.NullableDate => "DateTime?",
+                JsonTypeEnum.NullableSomething => "object",
+                JsonTypeEnum.Object => type.AssignedName,
+                JsonTypeEnum.String => "string",
+                _ => throw new NotSupportedException("Unsupported json type"),
+            };
         }
-
 
         private bool ShouldApplyNoRenamingAttribute(IJsonClassGeneratorConfig config)
         {
             return config.ApplyObfuscationAttributes && !config.ExplicitDeserialization && !config.UsePascalCase;
         }
+
         private bool ShouldApplyNoPruneAttribute(IJsonClassGeneratorConfig config)
         {
             return config.ApplyObfuscationAttributes && !config.ExplicitDeserialization && config.UseProperties;
@@ -99,7 +98,6 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
             }
         }
 
-
         public void WriteNamespaceStart(IJsonClassGeneratorConfig config, TextWriter sw, bool root)
         {
             sw.WriteLine();
@@ -115,7 +113,6 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
 
         public void WriteClass(IJsonClassGeneratorConfig config, TextWriter sw, JsonType type)
         {
-
             var visibility = config.InternalVisibility ? "internal" : "public";
 
             if (config.UseNestedClasses)
@@ -148,7 +145,6 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
 
             var prefix = config.UseNestedClasses && !type.IsRoot ? "            " : "        ";
 
-
             var shouldSuppressWarning = config.InternalVisibility && !config.UseProperties && !config.ExplicitDeserialization;
             if (shouldSuppressWarning)
             {
@@ -175,7 +171,6 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
                 sw.WriteLine();
             }
 
-
             if (config.UseNestedClasses && !type.IsRoot)
                 sw.WriteLine("        }");
 
@@ -183,11 +178,7 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
                 sw.WriteLine("    }");
 
             sw.WriteLine();
-
-
         }
-
-
 
         private void WriteClassMembers(IJsonClassGeneratorConfig config, TextWriter sw, JsonType type, string prefix)
         {
@@ -219,19 +210,12 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
                     sw.WriteLine(prefix + "public {0} {1};", field.Type.GetTypeName(), field.MemberName);
                 }
             }
-
         }
 
-
-
-
-
-
-
         #region Code for (obsolete) explicit deserialization
+
         private void WriteClassWithPropertiesExplicitDeserialization(TextWriter sw, JsonType type, string prefix)
         {
-
             sw.WriteLine(prefix + "private JObject __jobject;");
             sw.WriteLine(prefix + "public {0}(JObject obj)", type.AssignedName);
             sw.WriteLine(prefix + "{");
@@ -241,7 +225,6 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
 
             foreach (var field in type.Fields)
             {
-
                 string variable = null;
                 if (field.Type.MustCache)
                 {
@@ -249,7 +232,6 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
                     sw.WriteLine(prefix + "[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]");
                     sw.WriteLine(prefix + "private {0} {1};", field.Type.GetTypeName(), variable);
                 }
-
 
                 sw.WriteLine(prefix + "public {0} {1}", field.Type.GetTypeName(), field.MemberName);
                 sw.WriteLine(prefix + "{");
@@ -268,11 +250,8 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
                 sw.WriteLine(prefix + "    }");
                 sw.WriteLine(prefix + "}");
                 sw.WriteLine();
-
             }
-
         }
-
 
         private void WriteStringConstructorExplicitDeserialization(IJsonClassGeneratorConfig config, TextWriter sw, JsonType type, string prefix)
         {
@@ -286,15 +265,12 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
 
         private void WriteClassWithFieldsExplicitDeserialization(TextWriter sw, JsonType type, string prefix)
         {
-
-
             sw.WriteLine(prefix + "public {0}(JObject obj)", type.AssignedName);
             sw.WriteLine(prefix + "{");
 
             foreach (var field in type.Fields)
             {
                 sw.WriteLine(prefix + "    this.{0} = {1};", field.MemberName, field.GetGenerationCode("obj"));
-
             }
 
             sw.WriteLine(prefix + "}");
@@ -305,7 +281,7 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
                 sw.WriteLine(prefix + "public readonly {0} {1};", field.Type.GetTypeName(), field.MemberName);
             }
         }
-        #endregion
 
+        #endregion Code for (obsolete) explicit deserialization
     }
 }

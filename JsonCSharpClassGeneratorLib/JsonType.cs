@@ -1,19 +1,11 @@
 ﻿// Copyright © 2010 Xamasoft
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Newtonsoft.Json.Linq;
-using System.Data.Entity.Design.PluralizationServices;
-using System.Globalization;
 
 namespace Xamasoft.JsonClassGenerator
 {
     public class JsonType
     {
-
-
         private JsonType(IJsonClassGeneratorConfig generator)
         {
             this.generator = generator;
@@ -22,7 +14,6 @@ namespace Xamasoft.JsonClassGenerator
         public JsonType(IJsonClassGeneratorConfig generator, JToken token)
             : this(generator)
         {
-
             Type = GetFirstTypeEnum(token);
 
             if (Type == JsonTypeEnum.Array)
@@ -45,10 +36,8 @@ namespace Xamasoft.JsonClassGenerator
             this.Type = type;
         }
 
-
         public static JsonType GetCommonType(IJsonClassGeneratorConfig generator, JToken[] tokens)
         {
-
             if (tokens.Length == 0) return new JsonType(generator, JsonTypeEnum.NonConstrained);
 
             var common = new JsonType(generator, tokens[0]).MaybeMakeNullable(generator);
@@ -60,7 +49,6 @@ namespace Xamasoft.JsonClassGenerator
             }
 
             return common;
-
         }
 
         internal JsonType MaybeMakeNullable(IJsonClassGeneratorConfig generator)
@@ -69,18 +57,14 @@ namespace Xamasoft.JsonClassGenerator
             return this.GetCommonType(JsonType.GetNull(generator));
         }
 
-
-        public JsonTypeEnum Type { get; private set; }
-        public JsonType InternalType { get; private set; }
+        public JsonTypeEnum Type { get; set; }  //原set是private
+        public JsonType InternalType { get; set; } //原set是private
         public string AssignedName { get; private set; }
-
 
         public void AssignName(string name)
         {
             AssignedName = name;
         }
-
-
 
         public bool MustCache
         {
@@ -125,7 +109,6 @@ namespace Xamasoft.JsonClassGenerator
             return InternalType.GetInnermostType();
         }
 
-
         public string GetTypeName()
         {
             return generator.CodeWriter.GetTypeName(this, generator);
@@ -147,15 +130,18 @@ namespace Xamasoft.JsonClassGenerator
                 case JsonTypeEnum.NullableDate:
                 case JsonTypeEnum.String:
                     return "JValue";
+
                 case JsonTypeEnum.Array:
                     return "JArray";
+
                 case JsonTypeEnum.Dictionary:
                     return "JObject";
+
                 case JsonTypeEnum.Object:
                     return "JObject";
+
                 default:
                     return "JToken";
-
             }
         }
 
@@ -171,25 +157,20 @@ namespace Xamasoft.JsonClassGenerator
                 if (commonInternalType != InternalType) return new JsonType(generator, JsonTypeEnum.Array) { InternalType = commonInternalType };
             }
 
-
             //if (commonType == JsonTypeEnum.Dictionary)
             //{
             //    var commonInternalType = InternalType.GetCommonType(type2.InternalType);
             //    if (commonInternalType != InternalType) return new JsonType(JsonTypeEnum.Dictionary) { InternalType = commonInternalType };
             //}
 
-
             if (this.Type == commonType) return this;
             return new JsonType(generator, commonType).MaybeMakeNullable(generator);
         }
-
 
         private static bool IsNull(JsonTypeEnum type)
         {
             return type == JsonTypeEnum.NullableSomething;
         }
-
-
 
         private JsonTypeEnum GetCommonTypeEnum(JsonTypeEnum type1, JsonTypeEnum type2)
         {
@@ -202,53 +183,63 @@ namespace Xamasoft.JsonClassGenerator
                     if (IsNull(type2)) return JsonTypeEnum.NullableBoolean;
                     if (type2 == JsonTypeEnum.Boolean) return type1;
                     break;
+
                 case JsonTypeEnum.NullableBoolean:
                     if (IsNull(type2)) return type1;
                     if (type2 == JsonTypeEnum.Boolean) return type1;
                     break;
+
                 case JsonTypeEnum.Integer:
                     if (IsNull(type2)) return JsonTypeEnum.NullableInteger;
                     if (type2 == JsonTypeEnum.Float) return JsonTypeEnum.Float;
                     if (type2 == JsonTypeEnum.Long) return JsonTypeEnum.Long;
                     if (type2 == JsonTypeEnum.Integer) return type1;
                     break;
+
                 case JsonTypeEnum.NullableInteger:
                     if (IsNull(type2)) return type1;
                     if (type2 == JsonTypeEnum.Float) return JsonTypeEnum.NullableFloat;
                     if (type2 == JsonTypeEnum.Long) return JsonTypeEnum.NullableLong;
                     if (type2 == JsonTypeEnum.Integer) return type1;
                     break;
+
                 case JsonTypeEnum.Float:
                     if (IsNull(type2)) return JsonTypeEnum.NullableFloat;
                     if (type2 == JsonTypeEnum.Float) return type1;
                     if (type2 == JsonTypeEnum.Integer) return type1;
                     if (type2 == JsonTypeEnum.Long) return type1;
                     break;
+
                 case JsonTypeEnum.NullableFloat:
                     if (IsNull(type2)) return type1;
                     if (type2 == JsonTypeEnum.Float) return type1;
                     if (type2 == JsonTypeEnum.Integer) return type1;
                     if (type2 == JsonTypeEnum.Long) return type1;
                     break;
+
                 case JsonTypeEnum.Long:
                     if (IsNull(type2)) return JsonTypeEnum.NullableLong;
                     if (type2 == JsonTypeEnum.Float) return JsonTypeEnum.Float;
                     if (type2 == JsonTypeEnum.Integer) return type1;
                     break;
+
                 case JsonTypeEnum.NullableLong:
                     if (IsNull(type2)) return type1;
                     if (type2 == JsonTypeEnum.Float) return JsonTypeEnum.NullableFloat;
                     if (type2 == JsonTypeEnum.Integer) return type1;
                     if (type2 == JsonTypeEnum.Long) return type1;
                     break;
+
                 case JsonTypeEnum.Date:
                     if (IsNull(type2)) return JsonTypeEnum.NullableDate;
                     if (type2 == JsonTypeEnum.Date) return JsonTypeEnum.Date;
                     break;
+
                 case JsonTypeEnum.NullableDate:
                     if (IsNull(type2)) return type1;
                     if (type2 == JsonTypeEnum.Date) return type1;
                     break;
+
                 case JsonTypeEnum.NullableSomething:
                     if (IsNull(type2)) return type1;
                     if (type2 == JsonTypeEnum.String) return JsonTypeEnum.String;
@@ -260,11 +251,13 @@ namespace Xamasoft.JsonClassGenerator
                     if (type2 == JsonTypeEnum.Array) return JsonTypeEnum.Array;
                     if (type2 == JsonTypeEnum.Object) return JsonTypeEnum.Object;
                     break;
+
                 case JsonTypeEnum.Object:
                     if (IsNull(type2)) return type1;
                     if (type2 == JsonTypeEnum.Object) return type1;
                     if (type2 == JsonTypeEnum.Dictionary) throw new ArgumentException();
                     break;
+
                 case JsonTypeEnum.Dictionary:
                     throw new ArgumentException();
                 //if (IsNull(type2)) return type1;
@@ -275,6 +268,7 @@ namespace Xamasoft.JsonClassGenerator
                     if (IsNull(type2)) return type1;
                     if (type2 == JsonTypeEnum.Array) return type1;
                     break;
+
                 case JsonTypeEnum.String:
                     if (IsNull(type2)) return type1;
                     if (type2 == JsonTypeEnum.String) return type1;
@@ -282,15 +276,12 @@ namespace Xamasoft.JsonClassGenerator
             }
 
             return JsonTypeEnum.Anything;
-
         }
 
         private static bool IsNull(JTokenType type)
         {
             return type == JTokenType.Null || type == JTokenType.Undefined;
         }
-
-
 
         private static JsonTypeEnum GetFirstTypeEnum(JToken token)
         {
@@ -299,7 +290,6 @@ namespace Xamasoft.JsonClassGenerator
             {
                 if ((long)((JValue)token).Value < int.MaxValue) return JsonTypeEnum.Integer;
                 else return JsonTypeEnum.Long;
-
             }
             switch (type)
             {
@@ -313,10 +303,8 @@ namespace Xamasoft.JsonClassGenerator
                 case JTokenType.Date: return JsonTypeEnum.Date;
 
                 default: return JsonTypeEnum.Anything;
-
             }
         }
-
 
         public IList<FieldInfo> Fields { get; internal set; }
         public bool IsRoot { get; internal set; }

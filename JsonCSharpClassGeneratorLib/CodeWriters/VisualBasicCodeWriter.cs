@@ -44,7 +44,7 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
                 case JsonTypeEnum.NullableSomething: return "Object";
                 case JsonTypeEnum.Object: return type.AssignedName;
                 case JsonTypeEnum.String: return "String";
-                default: throw new System.NotSupportedException("Unsupported json type");
+                default: throw new NotSupportedException("Unsupported json type");
             }
         }
 

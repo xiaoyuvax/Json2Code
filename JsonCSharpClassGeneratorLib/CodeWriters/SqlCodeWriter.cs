@@ -37,7 +37,7 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
                 case JsonTypeEnum.NullableSomething: return "object NULL";
                 case JsonTypeEnum.Object: return type.AssignedName;
                 case JsonTypeEnum.String: return "[varchar](50) NULL";
-                default: throw new System.NotSupportedException("Unsupported json type");
+                default: throw new NotSupportedException("Unsupported json type");
             }
         }
 

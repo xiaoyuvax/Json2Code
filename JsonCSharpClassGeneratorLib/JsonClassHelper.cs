@@ -125,7 +125,7 @@ namespace JsonCSharpClassGenerator
             var value = GetJToken<JToken>(token);
             if (value == null) return null;
             if (value.Type == JTokenType.Object) return value;
-            if (value.Type == JTokenType.Array) return ReadArray<object>(value, ReadObject);
+            if (value.Type == JTokenType.Array) return ReadArray(value, ReadObject);
 
             var jvalue = value as JValue;
             if (jvalue != null) return jvalue.Value;
@@ -183,7 +183,7 @@ namespace JsonCSharpClassGenerator
             {
                 if (elemType.IsArray)
                 {
-                    array.SetValue(ReadArray<K>(GetJToken<JArray>(jArray[i]), reader, elemType), i);
+                    array.SetValue(ReadArray(GetJToken<JArray>(jArray[i]), reader, elemType), i);
                 }
                 else
                 {
