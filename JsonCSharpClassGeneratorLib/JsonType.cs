@@ -6,10 +6,7 @@ namespace Xamasoft.JsonClassGenerator
 {
     public class JsonType
     {
-        private JsonType(IJsonClassGeneratorConfig generator)
-        {
-            this.generator = generator;
-        }
+        private readonly IJsonClassGeneratorConfig generator;
 
         public JsonType(IJsonClassGeneratorConfig generator, JToken token)
             : this(generator)
@@ -23,48 +20,23 @@ namespace Xamasoft.JsonClassGenerator
             }
         }
 
-        internal static JsonType GetNull(IJsonClassGeneratorConfig generator)
-        {
-            return new JsonType(generator, JsonTypeEnum.NullableSomething);
-        }
-
-        private IJsonClassGeneratorConfig generator;
-
         internal JsonType(IJsonClassGeneratorConfig generator, JsonTypeEnum type)
             : this(generator)
         {
-            this.Type = type;
+            Type = type;
         }
 
-        public static JsonType GetCommonType(IJsonClassGeneratorConfig generator, JToken[] tokens)
+        private JsonType(IJsonClassGeneratorConfig generator)
         {
-            if (tokens.Length == 0) return new JsonType(generator, JsonTypeEnum.NonConstrained);
-
-            var common = new JsonType(generator, tokens[0]).MaybeMakeNullable(generator);
-
-            for (int i = 1; i < tokens.Length; i++)
-            {
-                var current = new JsonType(generator, tokens[i]);
-                common = common.GetCommonType(current);
-            }
-
-            return common;
+            this.generator = generator;
         }
-
-        internal JsonType MaybeMakeNullable(IJsonClassGeneratorConfig generator)
-        {
-            if (!generator.AlwaysUseNullableValues) return this;
-            return this.GetCommonType(JsonType.GetNull(generator));
-        }
-
-        public JsonTypeEnum Type { get; set; }  //原set是private
-        public JsonType InternalType { get; set; } //原set是private
         public string AssignedName { get; private set; }
 
-        public void AssignName(string name)
-        {
-            AssignedName = name;
-        }
+        public IList<FieldInfo> Fields { get; internal set; }
+
+        public JsonType InternalType { get; set; }
+
+        public bool IsRoot { get; internal set; }
 
         public bool MustCache
         {
@@ -82,24 +54,50 @@ namespace Xamasoft.JsonClassGenerator
             }
         }
 
-        public string GetReaderName()
+        public JsonTypeEnum Type { get; set; }
+
+        public static JsonType GetCommonType(IJsonClassGeneratorConfig generator, JToken[] tokens)
         {
-            if (Type == JsonTypeEnum.Anything || Type == JsonTypeEnum.NullableSomething || Type == JsonTypeEnum.NonConstrained)
+            if (tokens.Length == 0) return new JsonType(generator, JsonTypeEnum.NonConstrained);
+
+            var common = new JsonType(generator, tokens[0]).MaybeMakeNullable(generator);
+
+            for (int i = 1; i < tokens.Length; i++)
             {
-                return "ReadObject";
+                var current = new JsonType(generator, tokens[i]);
+                common = common.GetCommonType(current);
             }
-            if (Type == JsonTypeEnum.Object)
+
+            return common;
+        }
+
+        //原set是private
+        //原set是private
+        public void AssignName(string name)
+        {
+            AssignedName = name;
+        }
+
+        public JsonType GetCommonType(JsonType type2)
+        {
+            var commonType = GetCommonTypeEnum(Type, type2.Type);
+
+            if (commonType == JsonTypeEnum.Array)
             {
-                return string.Format("ReadStronglyTypedObject<{0}>", AssignedName);
+                if (type2.Type == JsonTypeEnum.NullableSomething) return this;
+                if (Type == JsonTypeEnum.NullableSomething) return type2;
+                var commonInternalType = InternalType.GetCommonType(type2.InternalType).MaybeMakeNullable(generator);
+                if (commonInternalType != InternalType) return new JsonType(generator, JsonTypeEnum.Array) { InternalType = commonInternalType };
             }
-            else if (Type == JsonTypeEnum.Array)
-            {
-                return string.Format("ReadArray<{0}>", InternalType.GetTypeName());
-            }
-            else
-            {
-                return string.Format("Read{0}", Enum.GetName(typeof(JsonTypeEnum), Type));
-            }
+
+            //if (commonType == JsonTypeEnum.Dictionary)
+            //{
+            //    var commonInternalType = InternalType.GetCommonType(type2.InternalType);
+            //    if (commonInternalType != InternalType) return new JsonType(JsonTypeEnum.Dictionary) { InternalType = commonInternalType };
+            //}
+
+            if (Type == commonType) return this;
+            return new JsonType(generator, commonType).MaybeMakeNullable(generator);
         }
 
         public JsonType GetInnermostType()
@@ -107,11 +105,6 @@ namespace Xamasoft.JsonClassGenerator
             if (Type != JsonTypeEnum.Array) throw new InvalidOperationException();
             if (InternalType.Type != JsonTypeEnum.Array) return InternalType;
             return InternalType.GetInnermostType();
-        }
-
-        public string GetTypeName()
-        {
-            return generator.CodeWriter.GetTypeName(this, generator);
         }
 
         public string GetJTokenType()
@@ -145,31 +138,71 @@ namespace Xamasoft.JsonClassGenerator
             }
         }
 
-        public JsonType GetCommonType(JsonType type2)
+        public string GetReaderName()
         {
-            var commonType = GetCommonTypeEnum(this.Type, type2.Type);
-
-            if (commonType == JsonTypeEnum.Array)
+            if (Type == JsonTypeEnum.Anything || Type == JsonTypeEnum.NullableSomething || Type == JsonTypeEnum.NonConstrained)
             {
-                if (type2.Type == JsonTypeEnum.NullableSomething) return this;
-                if (this.Type == JsonTypeEnum.NullableSomething) return type2;
-                var commonInternalType = InternalType.GetCommonType(type2.InternalType).MaybeMakeNullable(generator);
-                if (commonInternalType != InternalType) return new JsonType(generator, JsonTypeEnum.Array) { InternalType = commonInternalType };
+                return "ReadObject";
             }
+            if (Type == JsonTypeEnum.Object)
+            {
+                return string.Format("ReadStronglyTypedObject<{0}>", AssignedName);
+            }
+            else if (Type == JsonTypeEnum.Array)
+            {
+                return string.Format("ReadArray<{0}>", InternalType.GetTypeName());
+            }
+            else
+            {
+                return string.Format("Read{0}", Enum.GetName(typeof(JsonTypeEnum), Type));
+            }
+        }
 
-            //if (commonType == JsonTypeEnum.Dictionary)
-            //{
-            //    var commonInternalType = InternalType.GetCommonType(type2.InternalType);
-            //    if (commonInternalType != InternalType) return new JsonType(JsonTypeEnum.Dictionary) { InternalType = commonInternalType };
-            //}
+        public string GetTypeName()
+        {
+            return generator.CodeWriter.GetTypeName(this, generator);
+        }
 
-            if (this.Type == commonType) return this;
-            return new JsonType(generator, commonType).MaybeMakeNullable(generator);
+        internal static JsonType GetNull(IJsonClassGeneratorConfig generator)
+        {
+            return new JsonType(generator, JsonTypeEnum.NullableSomething);
+        }
+        internal JsonType MaybeMakeNullable(IJsonClassGeneratorConfig generator)
+        {
+            if (!generator.AlwaysUseNullableValues) return this;
+            return GetCommonType(JsonType.GetNull(generator));
+        }
+        private static JsonTypeEnum GetFirstTypeEnum(JToken token)
+        {
+            var type = token.Type;
+            if (type == JTokenType.Integer)
+            {
+                if ((long)((JValue)token).Value < int.MaxValue) return JsonTypeEnum.Integer;
+                else return JsonTypeEnum.Long;
+            }
+            switch (type)
+            {
+                case JTokenType.Array: return JsonTypeEnum.Array;
+                case JTokenType.Boolean: return JsonTypeEnum.Boolean;
+                case JTokenType.Float: return JsonTypeEnum.Float;
+                case JTokenType.Null: return JsonTypeEnum.NullableSomething;
+                case JTokenType.Undefined: return JsonTypeEnum.NullableSomething;
+                case JTokenType.String: return JsonTypeEnum.String;
+                case JTokenType.Object: return JsonTypeEnum.Object;
+                case JTokenType.Date: return JsonTypeEnum.Date;
+
+                default: return JsonTypeEnum.Anything;
+            }
         }
 
         private static bool IsNull(JsonTypeEnum type)
         {
             return type == JsonTypeEnum.NullableSomething;
+        }
+
+        private static bool IsNull(JTokenType type)
+        {
+            return type == JTokenType.Null || type == JTokenType.Undefined;
         }
 
         private JsonTypeEnum GetCommonTypeEnum(JsonTypeEnum type1, JsonTypeEnum type2)
@@ -277,36 +310,5 @@ namespace Xamasoft.JsonClassGenerator
 
             return JsonTypeEnum.Anything;
         }
-
-        private static bool IsNull(JTokenType type)
-        {
-            return type == JTokenType.Null || type == JTokenType.Undefined;
-        }
-
-        private static JsonTypeEnum GetFirstTypeEnum(JToken token)
-        {
-            var type = token.Type;
-            if (type == JTokenType.Integer)
-            {
-                if ((long)((JValue)token).Value < int.MaxValue) return JsonTypeEnum.Integer;
-                else return JsonTypeEnum.Long;
-            }
-            switch (type)
-            {
-                case JTokenType.Array: return JsonTypeEnum.Array;
-                case JTokenType.Boolean: return JsonTypeEnum.Boolean;
-                case JTokenType.Float: return JsonTypeEnum.Float;
-                case JTokenType.Null: return JsonTypeEnum.NullableSomething;
-                case JTokenType.Undefined: return JsonTypeEnum.NullableSomething;
-                case JTokenType.String: return JsonTypeEnum.String;
-                case JTokenType.Object: return JsonTypeEnum.Object;
-                case JTokenType.Date: return JsonTypeEnum.Date;
-
-                default: return JsonTypeEnum.Anything;
-            }
-        }
-
-        public IList<FieldInfo> Fields { get; internal set; }
-        public bool IsRoot { get; internal set; }
     }
 }

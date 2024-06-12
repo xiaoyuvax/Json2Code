@@ -1,22 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 
 namespace Xamasoft.JsonClassGenerator.CodeWriters
 {
     public class JavaCodeWriter : ICodeWriter
     {
-        public string FileExtension
-        {
-            get { return ".java"; }
-        }
-
-        public string DisplayName
-        {
-            get { return "Java"; }
-        }
+        public string DisplayName => "Java";
+        public string FileExtension => ".java";
 
         public string GetTypeName(JsonType type, IJsonClassGeneratorConfig config)
         {
@@ -73,12 +62,11 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
 
             //    if (ShouldApplyNoRenamingAttribute(config)) sw.WriteLine("    " + NoRenameAttribute);
             //    if (ShouldApplyNoPruneAttribute(config)) sw.WriteLine("    " + NoPruneAttribute);
-                sw.WriteLine("{0} class {1}", visibility, type.AssignedName);
-                sw.WriteLine("{");
+            sw.WriteLine("{0} class {1}", visibility, type.AssignedName);
+            sw.WriteLine("{");
             //}
 
             var prefix = config.UseNestedClasses && !type.IsRoot ? "" : "    ";
-
 
             var shouldSuppressWarning = config.InternalVisibility && !config.UseProperties && !config.ExplicitDeserialization;
             if (shouldSuppressWarning)
@@ -96,7 +84,7 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
             //}
             //else
             //{
-                WriteClassMembers(config, sw, type, prefix);
+            WriteClassMembers(config, sw, type, prefix);
             //}
 
             if (shouldSuppressWarning)
@@ -105,7 +93,6 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
                 sw.WriteLine("#pragma warning restore 0649");
                 sw.WriteLine();
             }
-
 
             if (config.UseNestedClasses && !type.IsRoot)
                 sw.WriteLine("        }");
@@ -116,6 +103,11 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
             sw.WriteLine();
         }
 
+        public void WriteFileEnd(IJsonClassGeneratorConfig config, TextWriter sw)
+        {
+            throw new NotImplementedException();
+        }
+
         public void WriteFileStart(IJsonClassGeneratorConfig config, TextWriter sw)
         {
             foreach (var line in JsonClassGenerator.FileHeader)
@@ -124,9 +116,9 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
             }
         }
 
-        public void WriteFileEnd(IJsonClassGeneratorConfig config, TextWriter sw)
+        public void WriteNamespaceEnd(IJsonClassGeneratorConfig config, TextWriter sw, bool root)
         {
-            throw new NotImplementedException();
+            sw.WriteLine();
         }
 
         public void WriteNamespaceStart(IJsonClassGeneratorConfig config, TextWriter sw, bool root)
@@ -136,9 +128,18 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
             sw.WriteLine();
         }
 
-        public void WriteNamespaceEnd(IJsonClassGeneratorConfig config, TextWriter sw, bool root)
+        private static string ChangeFirstChar(string value, bool toCaptial = true)
         {
-            sw.WriteLine();
+            if (value == null)
+                throw new ArgumentNullException("value");
+            if (value.Length == 0)
+                return value;
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append(toCaptial ? char.ToUpper(value[0]) : char.ToLower(value[0]));
+            sb.Append(value.Substring(1));
+
+            return sb.ToString();
         }
 
         private void WriteClassMembers(IJsonClassGeneratorConfig config, TextWriter sw, JsonType type, string prefix)
@@ -172,32 +173,17 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
                     sw.WriteLine(prefix + "@JsonProperty" + "(\"{0}\")", field.JsonMemberName);
                     sw.WriteLine(prefix + "public {0} get{1}() {{ \r\t\t return this.{2} \r\t}}", field.Type.GetTypeName(), ChangeFirstChar(field.MemberName), ChangeFirstChar(field.MemberName, false));
                     sw.WriteLine(prefix + "public {0} set{1}({0} {2}) {{ \r\t\t this.{2} = {2} \r\t}}", field.Type.GetTypeName(), ChangeFirstChar(field.MemberName), ChangeFirstChar(field.MemberName, false));
-                    sw.WriteLine(prefix + "{0} {1};", field.Type.GetTypeName(), ChangeFirstChar(field.MemberName, false)); 
+                    sw.WriteLine(prefix + "{0} {1};", field.Type.GetTypeName(), ChangeFirstChar(field.MemberName, false));
                     sw.WriteLine();
                 }
                 else
                 {
                     string memberName = ChangeFirstChar(field.MemberName, false);
-                    if(field.JsonMemberName != memberName)
+                    if (field.JsonMemberName != memberName)
                         sw.WriteLine(prefix + "@JsonProperty" + "(\"{0}\")", field.JsonMemberName);
                     sw.WriteLine(prefix + "public {0} {1};", field.Type.GetTypeName(), memberName);
                 }
             }
-
-        }
-
-        private static string ChangeFirstChar(string value, bool toCaptial = true)
-        {
-            if (value == null)
-                throw new ArgumentNullException("value");
-            if (value.Length == 0)
-                return value;
-            StringBuilder sb = new StringBuilder();
-
-            sb.Append(toCaptial ? char.ToUpper(value[0]) : char.ToLower(value[0]));
-            sb.Append(value.Substring(1));
-
-            return sb.ToString();
         }
     }
 }

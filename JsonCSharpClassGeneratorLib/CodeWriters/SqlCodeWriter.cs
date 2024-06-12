@@ -4,15 +4,8 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
 {
     public class SqlCodeWriter : ICodeWriter
     {
-        public string FileExtension
-        {
-            get { return ".cs"; }
-        }
-
-        public string DisplayName
-        {
-            get { return "SQL"; }
-        }
+        public string DisplayName => "SQL";
+        public string FileExtension => ".cs";
 
         public string GetTypeName(JsonType type, IJsonClassGeneratorConfig config)
         {
@@ -41,29 +34,6 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
             }
         }
 
-        public void WriteFileStart(IJsonClassGeneratorConfig config, TextWriter sw)
-        {
-            
-        }
-
-        public void WriteFileEnd(IJsonClassGeneratorConfig config, TextWriter sw)
-        {
-            if (config.UseNestedClasses)
-            {
-                sw.WriteLine("    }");
-            }
-        }
-
-        public void WriteNamespaceStart(IJsonClassGeneratorConfig config, TextWriter sw, bool root)
-        {
-
-        }
-
-        public void WriteNamespaceEnd(IJsonClassGeneratorConfig config, TextWriter sw, bool root)
-        {
-            //sw.WriteLine("}");
-        }
-
         public void WriteClass(IJsonClassGeneratorConfig config, TextWriter sw, JsonType type)
         {
             sw.WriteLine("create table " + type.AssignedName + " (");
@@ -80,14 +50,32 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
             sw.WriteLine();
         }
 
+        public void WriteFileEnd(IJsonClassGeneratorConfig config, TextWriter sw)
+        {
+            if (config.UseNestedClasses) sw.WriteLine("    }");
+        }
+
+        public void WriteFileStart(IJsonClassGeneratorConfig config, TextWriter sw)
+        {
+        }
+
+        public void WriteNamespaceEnd(IJsonClassGeneratorConfig config, TextWriter sw, bool root)
+        {
+            //sw.WriteLine("}");
+        }
+
+        public void WriteNamespaceStart(IJsonClassGeneratorConfig config, TextWriter sw, bool root)
+        {
+        }
+
         private void WriteClassMembers(IJsonClassGeneratorConfig config, TextWriter sw, JsonType type)
         {
             foreach (var field in type.Fields)
-            {              
+            {
                 if (config.UseProperties)
                 {
-                    string typeName = field.Type.InternalType == null 
-                        ? field.Type.GetTypeName() 
+                    string typeName = field.Type.InternalType == null
+                        ? field.Type.GetTypeName()
                         : field.Type.InternalType.GetTypeName();
 
                     sw.WriteLine("    [{0}] {1},", field.MemberName, typeName);

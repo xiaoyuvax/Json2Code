@@ -1,25 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-namespace Xamasoft.JsonClassGenerator.CodeWriters
+﻿namespace Xamasoft.JsonClassGenerator.CodeWriters
 {
     public class VisualBasicCodeWriter : ICodeWriter
     {
-        public string FileExtension
-        {
-            get { return ".vb"; }
-        }
-
-        public string DisplayName
-        {
-            get { return "Visual Basic .NET"; }
-        }
-
-        private const string NoRenameAttribute = "<Obfuscation(Feature:=\"renaming\", Exclude:=true)>";
         private const string NoPruneAttribute = "<Obfuscation(Feature:=\"trigger\", Exclude:=false)>";
+        private const string NoRenameAttribute = "<Obfuscation(Feature:=\"renaming\", Exclude:=true)>";
+        public string DisplayName => "Visual Basic .NET";
+        public string FileExtension => ".vb";
 
         public string GetTypeName(JsonType type, IJsonClassGeneratorConfig config)
         {
@@ -46,15 +32,6 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
                 case JsonTypeEnum.String: return "String";
                 default: throw new NotSupportedException("Unsupported json type");
             }
-        }
-
-        private bool ShouldApplyNoRenamingAttribute(IJsonClassGeneratorConfig config)
-        {
-            return config.ApplyObfuscationAttributes && !config.ExplicitDeserialization && !config.UsePascalCase;
-        }
-        private bool ShouldApplyNoPruneAttribute(IJsonClassGeneratorConfig config)
-        {
-            return config.ApplyObfuscationAttributes && !config.ExplicitDeserialization && config.UseProperties;
         }
 
         public void WriteClass(IJsonClassGeneratorConfig config, TextWriter sw, JsonType type)
@@ -87,46 +64,11 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
 
             sw.WriteLine("    End Class");
             sw.WriteLine();
-
         }
 
-
-        private void WriteClassMembers(IJsonClassGeneratorConfig config, TextWriter sw, JsonType type, string prefix)
+        public void WriteFileEnd(IJsonClassGeneratorConfig config, TextWriter sw)
         {
-            foreach (var field in type.Fields)
-            {
-                if (config.UsePascalCase || config.ExamplesInDocumentation) sw.WriteLine();
-
-                if (config.ExamplesInDocumentation)
-                {
-                    sw.WriteLine(prefix + "''' <summary>");
-                    sw.WriteLine(prefix + "''' Examples: " + field.GetExamplesText());
-                    sw.WriteLine(prefix + "''' </summary>");
-                }
-
-
-                if (config.UsePascalCase)
-                {
-                    sw.WriteLine(prefix + "<JsonProperty(\"{0}\")>", field.JsonMemberName);
-                }
-
-                var validVbName = VisualBasicReservedWords.IsReserved(field.MemberName) ? $"[{field.MemberName}]" : field.MemberName;
-
-                if (config.UseProperties)
-                {
-                    sw.WriteLine(prefix + "Public Property {1} As {0}", field.Type.GetTypeName(), validVbName);
-                }
-                else
-                {
-                    sw.WriteLine(prefix + "Public {1} As {0}", field.Type.GetTypeName(), validVbName);
-                }
-            }
-
         }
-
-
-
-
 
         public void WriteFileStart(IJsonClassGeneratorConfig config, TextWriter sw)
         {
@@ -148,10 +90,10 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
             }
         }
 
-        public void WriteFileEnd(IJsonClassGeneratorConfig config, TextWriter sw)
+        public void WriteNamespaceEnd(IJsonClassGeneratorConfig config, TextWriter sw, bool root)
         {
+            sw.WriteLine("End Namespace");
         }
-
 
         public void WriteNamespaceStart(IJsonClassGeneratorConfig config, TextWriter sw, bool root)
         {
@@ -160,11 +102,45 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
             sw.WriteLine();
         }
 
-        public void WriteNamespaceEnd(IJsonClassGeneratorConfig config, TextWriter sw, bool root)
+        private bool ShouldApplyNoPruneAttribute(IJsonClassGeneratorConfig config)
         {
+            return config.ApplyObfuscationAttributes && !config.ExplicitDeserialization && config.UseProperties;
+        }
 
-            sw.WriteLine("End Namespace");
+        private bool ShouldApplyNoRenamingAttribute(IJsonClassGeneratorConfig config)
+        {
+            return config.ApplyObfuscationAttributes && !config.ExplicitDeserialization && !config.UsePascalCase;
+        }
 
+        private void WriteClassMembers(IJsonClassGeneratorConfig config, TextWriter sw, JsonType type, string prefix)
+        {
+            foreach (var field in type.Fields)
+            {
+                if (config.UsePascalCase || config.ExamplesInDocumentation) sw.WriteLine();
+
+                if (config.ExamplesInDocumentation)
+                {
+                    sw.WriteLine(prefix + "''' <summary>");
+                    sw.WriteLine(prefix + "''' Examples: " + field.GetExamplesText());
+                    sw.WriteLine(prefix + "''' </summary>");
+                }
+
+                if (config.UsePascalCase)
+                {
+                    sw.WriteLine(prefix + "<JsonProperty(\"{0}\")>", field.JsonMemberName);
+                }
+
+                var validVbName = VisualBasicReservedWords.IsReserved(field.MemberName) ? $"[{field.MemberName}]" : field.MemberName;
+
+                if (config.UseProperties)
+                {
+                    sw.WriteLine(prefix + "Public Property {1} As {0}", field.Type.GetTypeName(), validVbName);
+                }
+                else
+                {
+                    sw.WriteLine(prefix + "Public {1} As {0}", field.Type.GetTypeName(), validVbName);
+                }
+            }
         }
     }
 }

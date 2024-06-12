@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Xamasoft.JsonClassGenerator
+﻿namespace Xamasoft.JsonClassGenerator
 {
     internal static class VisualBasicReservedWords
     {
-        internal static string[] VbReservedWords = new[]
-        {
+        internal static string[] VbReservedWords =
+        [
             "AddHandler",
             "AddressOf",
             "Alias",
@@ -155,7 +150,7 @@ namespace Xamasoft.JsonClassGenerator
             "WithEvents",
             "WriteOnly",
              "Xor"
-        };
+        ];
 
         internal static bool IsReserved(string name)
         {

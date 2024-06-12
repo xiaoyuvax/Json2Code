@@ -1,22 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 
 namespace Xamasoft.JsonClassGenerator.CodeWriters
 {
     public class PhpCodeWriter : ICodeWriter
     {
-        public string FileExtension
-        {
-            get { return ".php"; }
-        }
-
-        public string DisplayName
-        {
-            get { return "PHP"; }
-        }
+        public string DisplayName => "PHP";
+        public string FileExtension => ".php";
 
         public string GetTypeName(JsonType type, IJsonClassGeneratorConfig config)
         {
@@ -78,7 +67,6 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
 
             var prefix = config.UseNestedClasses && !type.IsRoot ? "" : "    ";
 
-
             var shouldSuppressWarning = config.InternalVisibility && !config.UseProperties && !config.ExplicitDeserialization;
             if (shouldSuppressWarning)
             {
@@ -105,7 +93,6 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
                 sw.WriteLine();
             }
 
-
             if (config.UseNestedClasses && !type.IsRoot)
                 sw.WriteLine("        }");
 
@@ -115,14 +102,20 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
             sw.WriteLine();
         }
 
+        public void WriteFileEnd(IJsonClassGeneratorConfig config, TextWriter sw)
+        {
+            throw new NotImplementedException();
+        }
+
         public void WriteFileStart(IJsonClassGeneratorConfig config, TextWriter sw)
         {
             throw new NotImplementedException();
         }
 
-        public void WriteFileEnd(IJsonClassGeneratorConfig config, TextWriter sw)
+        public void WriteNamespaceEnd(IJsonClassGeneratorConfig config, TextWriter sw, bool root)
         {
-            throw new NotImplementedException();
+            sw.Write("\r");
+            sw.WriteLine("?>");
         }
 
         public void WriteNamespaceStart(IJsonClassGeneratorConfig config, TextWriter sw, bool root)
@@ -131,10 +124,18 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
             sw.Write("\r");
         }
 
-        public void WriteNamespaceEnd(IJsonClassGeneratorConfig config, TextWriter sw, bool root)
+        private static string ChangeFirstChar(string value, bool toCaptial = true)
         {
-            sw.Write("\r");
-            sw.WriteLine("?>");
+            if (value == null)
+                throw new ArgumentNullException("value");
+            if (value.Length == 0)
+                return value;
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append(toCaptial ? char.ToUpper(value[0]) : char.ToLower(value[0]));
+            sb.Append(value.Substring(1));
+
+            return sb.ToString();
         }
 
         private void WriteClassMembers(IJsonClassGeneratorConfig config, TextWriter sw, JsonType type, string prefix)
@@ -172,25 +173,10 @@ namespace Xamasoft.JsonClassGenerator.CodeWriters
                     sw.WriteLine();
                 }
                 else
-                {                    
+                {
                     sw.WriteLine(prefix + "public ${1}; //{0}", field.Type.GetTypeName(), field.MemberName);
                 }
             }
-
-        }
-
-        private static string ChangeFirstChar(string value, bool toCaptial = true)
-        {
-            if (value == null)
-                throw new ArgumentNullException("value");
-            if (value.Length == 0)
-                return value;
-            StringBuilder sb = new StringBuilder();
-
-            sb.Append(toCaptial ? char.ToUpper(value[0]) : char.ToLower(value[0]));
-            sb.Append(value.Substring(1));
-
-            return sb.ToString();
         }
     }
 }

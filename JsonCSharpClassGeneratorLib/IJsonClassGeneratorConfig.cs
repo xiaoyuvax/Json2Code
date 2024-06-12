@@ -1,29 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Xamasoft.JsonClassGenerator.CodeWriters;
 
 namespace Xamasoft.JsonClassGenerator
 {
     public interface IJsonClassGeneratorConfig
     {
-        string Namespace { get; set; }
-        string SecondaryNamespace { get; set; }
-        bool UseProperties { get; set; }
-        bool InternalVisibility { get; set; }
-        bool ExplicitDeserialization { get; set; }
-        bool NoHelperClass { get; set; }
-        string MainClass { get; set; }
-        bool UsePascalCase { get; set; }
-        bool UseNestedClasses { get; set; }
-        bool ApplyObfuscationAttributes { get; set; }
-        bool SingleFile { get; set; }
-        ICodeWriter CodeWriter { get; set; }
-        bool HasSecondaryClasses { get; }
         bool AlwaysUseNullableValues { get; set; }
-        bool UseNamespaces { get; }
+        bool ApplyObfuscationAttributes { get; set; }
+        ICodeWriter CodeWriter { get; set; }
         bool ExamplesInDocumentation { get; set; }
-
-        string PropertyAttribute { get; set; }
+        bool ExplicitDeserialization { get; set; }
+        bool HasSecondaryClasses { get; }
+        bool InternalVisibility { get; set; }
+        string MainClass { get; set; }
+        string Namespace { get; set; }
+        bool NoHelperClass { get; set; }
+        AttributeEnum PropertyAttribute { get; set; }
+        string SecondaryNamespace { get; set; }
+        bool SingleFile { get; set; }
+        bool UseNamespaces { get; }
+        bool UseNestedClasses { get; set; }
+        bool UsePascalCase { get; set; }
+        bool UseProperties { get; set; }
     }
 }

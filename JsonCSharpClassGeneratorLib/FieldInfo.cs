@@ -1,30 +1,29 @@
 ﻿// Copyright © 2010 Xamasoft
 
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Xamasoft.JsonClassGenerator
 {
     public class FieldInfo
     {
+        private readonly IJsonClassGeneratorConfig generator;
 
         public FieldInfo(IJsonClassGeneratorConfig generator, string jsonMemberName, JsonType type, bool usePascalCase, IList<object> Examples)
         {
             this.generator = generator;
-            this.JsonMemberName = jsonMemberName;
-            this.MemberName = jsonMemberName;
+            JsonMemberName = jsonMemberName;
+            MemberName = jsonMemberName;
             if (usePascalCase) MemberName = JsonClassGenerator.ToTitleCase(MemberName);
-            this.Type = type;
+            Type = type;
             this.Examples = Examples;
         }
-        private IJsonClassGeneratorConfig generator;
-        public string MemberName { get; private set; }
-        public string JsonMemberName { get; private set; }
-        public JsonType Type { get; private set; }
+
         public IList<object> Examples { get; private set; }
+        public string JsonMemberName { get; private set; }
+        public string MemberName { get; private set; }
+        public JsonType Type { get; private set; }
+
+        public string GetExamplesText() => string.Join(", ", Examples.Take(5).Select(JsonConvert.SerializeObject).ToArray());
 
         public string GetGenerationCode(string jobject)
         {
@@ -44,7 +43,6 @@ namespace Xamasoft.JsonClassGenerator
             }
             else if (field.Type.Type == JsonTypeEnum.Dictionary)
             {
-
                 return string.Format("({1})JsonClassHelper.ReadDictionary<{2}>(JsonClassHelper.GetJToken<JObject>({0}, \"{3}\"))",
                     jobject,
                     field.Type.GetTypeName(),
@@ -61,15 +59,6 @@ namespace Xamasoft.JsonClassGenerator
                     field.Type.GetJTokenType(),
                     field.JsonMemberName);
             }
-
         }
-
-
-
-        public string GetExamplesText()
-        {
-            return string.Join(", ", Examples.Take(5).Select(x => JsonConvert.SerializeObject(x)).ToArray());
-        }
-
     }
 }

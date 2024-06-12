@@ -5,7 +5,7 @@ VisualStudioVersion = 17.9.34902.65
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonClassGeneratorLib", "JsonCSharpClassGeneratorLib\JsonClassGeneratorLib.csproj", "{7BEF7EAA-DE37-40FB-BD33-3DEF0685031F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Json2CSharp", "Json2CSharp\Json2CSharp.csproj", "{EF2ABFA8-7C97-41A0-8263-1B0418CEEBC7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Json2Code", "Json2CSharp\Json2Code.csproj", "{EF2ABFA8-7C97-41A0-8263-1B0418CEEBC7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
